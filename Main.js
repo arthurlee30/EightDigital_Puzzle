@@ -238,3 +238,76 @@ function onFrame () {
 	time = currentTime - startTime;
 	updateTimeTxt();
 }
+
+function gameOver () {
+	isGameOver = true;
+
+	var resultLayer = new LSprite();
+	resultLayer.filters = [new LDropShadowFilter()];
+	resultLayer.graphics.drawRoundRect(3, "#BBBBBB", [0, 0, 350, 350, 5], true,"#DDDDDD");
+	resultLayer.x = (LGlobal.width - resultLayer.getWidth()) / 2;
+	resultLayer.y = LGlobal.height / 2;
+	resultLayer.alpha = 0;
+	overLayer.addChild(resultLayer);
+
+	var title = new LTextField();
+	title.text = "游戏通关"
+	title.weight = "bold";
+	title.stroke = true;
+	title.lineWidth = 3;
+	title.lineColor = "#555555";
+	title.size = 30;
+	title.color = "#FFFFFF";
+	title.x = (resultLayer.getWidth() - title.getWidth()) / 2;
+	title.y = 30;
+	resultLayer.addChild(title);
+
+	var usedTimeTxt = new LTextField();
+	usedTimeTxt.text = "游戏用时：" + getTimeTxt(time);
+	usedTimeTxt.size = 20;
+	usedTimeTxt.stroke = true;
+	usedTimeTxt.lineWidth = 2;
+	usedTimeTxt.lineColor = "#555555";
+	usedTimeTxt.color = "#FFFFFF";
+	usedTimeTxt.x = (resultLayer.getWidth() - usedTimeTxt.getWidth()) / 2;
+	usedTimeTxt.y = 130;
+	resultLayer.addChild(usedTimeTxt);
+
+	var usedStepsTxt = new LTextField();
+	usedStepsTxt.text = "所用步数：" + steps;
+	usedStepsTxt.size = 20;
+	usedStepsTxt.stroke = true;
+	usedStepsTxt.lineWidth = 2;
+	usedStepsTxt.lineColor = "#555555";
+	usedStepsTxt.color = "#FFFFFF";
+	usedStepsTxt.x = usedTimeTxt.x;
+	usedStepsTxt.y = 180;
+	resultLayer.addChild(usedStepsTxt);
+
+	var hintTxt = new LTextField();
+	hintTxt.text = "- 点击屏幕重新开始 -";
+	hintTxt.size = 23;
+	hintTxt.stroke = true;
+	hintTxt.lineWidth = 2;
+	hintTxt.lineColor = "#888888";
+	hintTxt.color = "#FFFFFF";
+	hintTxt.x = (resultLayer.getWidth() - hintTxt.getWidth()) / 2;
+	hintTxt.y = 260;
+	resultLayer.addChild(hintTxt);
+
+	LTweenLite.to(resultLayer, 0.5, {
+		alpha : 0.7,
+		y : (LGlobal.height - resultLayer.getHeight()) / 2,
+		onComplete : function () {
+			/** 点击界面重新开始游戏 */
+			stageLayer.addEventListener(LMouseEvent.MOUSE_UP, function () {
+				gameLayer.removeAllChild();
+				overLayer.removeAllChild();
+
+				stageLayer.removeAllEventListener();
+
+				startGame();
+			});
+		}
+	});
+}
