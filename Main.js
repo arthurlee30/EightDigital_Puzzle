@@ -5,6 +5,13 @@ var imgBmpd;
 /** 游戏层 */
 var stageLayer, gameLayer, overLayer;
 /** 拼图块列表 */
+var blockList;
+/** 是否游戏结束 */
+var isGameOver;
+/** 用时 */
+var startTime, time, timeTxt;
+/** 步数 */
+var steps, stepsTxt;
 
 function main () {
 	/** 全屏设置 */
@@ -93,8 +100,141 @@ function addBeginningUI () {
 }
 
 function startGame () {
+	isGameOver = false;
+
 	/** 初始化时间和步数 */
 	startTime = (new Date()).getTime();
 	time = 0;
 	steps = 0;
+	/** 初始化拼图块列表 */
+	initBlockList();
+	/** 打乱拼图 */
+	getRandomBlockList();
+	/** 显示拼图 */
+	showBlock();
+	/** 显示缩略图 */
+	showThumbnail();
+	/** 显示时间 */
+	addTimeTxt();
+	/** 显示步数 */
+	addStepsTxt();
+
+	stageLayer.addEventListener(LEvent.ENTER_FRAME, onFrame);
+}
+
+function initBlockList () {
+	blockList = new Array();
+
+	for (var i = 0; i < 9; i++) {
+		/** 根据序号计算拼图块图片显示位置 */
+		var y = (i / 3) >>> 0, x = i % 3;
+
+		blockList.push(new Block(i, x, y));
+	}
+}
+
+function getRandomBlockList () {
+	/** 随机打乱拼图 */
+	blockList.sort(function () {
+		return 0.5 - Math.random();
+	});
+
+	/** 计算逆序和 */
+	var reverseAmount = 0;
+
+	for (var i = 0, l = blockList.length; i < l; i++) {
+		var currentBlock = blockList[i];
+
+		for (var j = i + 1; j < l; j++) {
+			var comparedBlock = blockList[j];
+
+			if (comparedBlock.index < currentBlock.index) {
+				reverseAmount++;
+			}
+		}
+	}
+
+	/** 检测打乱后是否可还原 */
+	if (reverseAmount % 2 != 0) {
+		/** 不合格，重新打乱 */
+		getRandomBlockList();
+	}
+}
+
+function showBlock() {
+	for (var i = 0, l = blockList.length; i < l; i++) {
+		var b = blockList[i];
+
+		/** 根据序号计算拼图块位置 */
+		var y = (i / 3) >>> 0, x = i % 3;
+
+		b.setLocation(x, y);
+
+		gameLayer.addChild(b);
+	}
+}
+
+function showThumbnail() {
+	var thumbnail = new LBitmap(imgBmpd);
+	thumbnail.scaleX = 130 / imgBmpd.width;
+	thumbnail.scaleY = 130 / imgBmpd.height;
+	thumbnail.x = (LGlobal.width - 100) /2;
+	thumbnail.y = 410;
+	overLayer.addChild(thumbnail);
+}
+
+function addTimeTxt () {
+	timeTxt = new LTextField();
+	timeTxt.stroke = true;
+	timeTxt.lineWidth = 3;
+	timeTxt.lineColor = "#54D9EF";
+	timeTxt.color = "#FFFFFF";
+	timeTxt.size = 18;
+	timeTxt.x = 20;
+	timeTxt.y = 450;
+	overLayer.addChild(timeTxt);
+
+	updateTimeTxt();
+}
+
+function updateTimeTxt () {
+	timeTxt.text = "时间：" + getTimeTxt(time);
+}
+
+function getTimeTxt () {
+	var d = new Date(time);
+
+	return d.getMinutes() + " : " + d.getSeconds();
+};
+
+function addStepsTxt () {
+	stepsTxt = new LTextField();
+	stepsTxt.stroke = true;
+	stepsTxt.lineWidth = 3;
+	stepsTxt.lineColor = "#54D9EF";
+	stepsTxt.color = "#FFFFFF";
+	stepsTxt.size = 18;
+	stepsTxt.y = 450;
+	overLayer.addChild(stepsTxt);
+
+	updateStepsTxt();
+}
+
+function updateStepsTxt () {
+	stepsTxt.text = "步数：" + steps;
+
+	stepsTxt.x = LGlobal.width - stepsTxt.getWidth() - 20;
+}
+
+function onFrame () {
+	if (isGameOver) {
+		return;
+	}
+
+	/** 获取当前时间 */
+	var currentTime = (new Date()).getTime();
+
+	/** 计算使用的时间并更新时间显示 */
+	time = currentTime - startTime;
+	updateTimeTxt();
 }
